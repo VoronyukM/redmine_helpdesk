@@ -21,7 +21,12 @@ class HelpdeskMailer < ActionMailer::Base
     redmine_headers 'Issue-Assignee' => issue.assigned_to.login if issue.assigned_to
     message_id issue
     references issue
-    subject = "[##{issue.id}] #{issue.subject}"
+    begin
+      issue_id = issue.issue_id.to_s
+    rescue
+      issue_id = issue.id
+    end
+    subject = "[##{issue_id}] #{issue.subject}"
     # Set 'from' email-address to 'helpdesk-sender-email' if available.
     # Falls back to regular redmine behaviour if 'sender' is empty.
     p = issue.project
