@@ -49,7 +49,12 @@ class HelpdeskMailer < ActionMailer::Base
           begin
             attachments[a.filename] = File.read(a.diskfile)
           rescue
-            # ignore rescue
+	    begin
+              # try to obtain the attachment from dropbox (if redmine_dropbox_attachments plugin is used)
+	      attachments[a.filename] = Attachment.dropbox_client.find(a.dropbox_path).download
+	    rescue
+              logger.debug "[redmine_helpdesk] Failed to attach  #{a.filename}"
+	    end
           end
         end
       end
