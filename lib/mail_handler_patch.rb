@@ -5,6 +5,7 @@ module RedmineHelpdesk
       
       base.class_eval do
         alias_method_chain :dispatch_to_default, :helpdesk
+        alias_method_chain :receive_issue_reply, :helpdesk
       end
     end
     
@@ -20,13 +21,18 @@ module RedmineHelpdesk
         # permission treat_user_as_supportclient enabled
         if roles.any? {|role| role.allowed_to?(:treat_user_as_supportclient) }
           sender_email = @email.from.first
+          # turn off the block and use the subroutine instead
+          if false
           email_details = "From: " + @email[:from].formatted.first + "\n"
           email_details << "To: " + @email[:to].formatted.join(', ') + "\n"
           if !@email.cc.nil?
             email_details << "Cc: " + @email[:cc].formatted.join(', ') + "\n"
           end
           email_details << "Date: " + @email[:date].to_s + "\n"
+          email_details << "Subject: " + @email[:subject].to_s + "\n"
           email_details = "<pre>\n" + Mail::Encodings.unquote_and_convert_to(email_details, 'utf-8') + "</pre>"
+	  end
+	  email_details = compose_email_details()
           issue.description = email_details + issue.description
           issue.save
           custom_field = CustomField.find_by_name('owner-email')
@@ -62,6 +68,27 @@ module RedmineHelpdesk
                                :content_type => attachment.mime_type)
           end
         end
+      end
+      # just copy and paste the lines above
+      def compose_email_details()
+	  email_details = "From: " + @email[:from].formatted.first + "\n"
+          email_details << "To: " + @email[:to].formatted.join(', ') + "\n"
+          if !@email.cc.nil?
+            email_details << "Cc: " + @email[:cc].formatted.join(', ') + "\n"
+          end
+          email_details << "Date: " + @email[:date].to_s + "\n"
+          email_details << "Subject: " + @email[:subject].to_s + "\n"
+          email_details = "<pre>\n" + Mail::Encodings.unquote_and_convert_to(email_details, 'utf-8') + "</pre>"
+          email_details
+      end
+      # Overrides the receive_issue_reply method to
+      # append email details
+      def receive_issue_reply_with_helpdesk(issue_id, from_journal=nil)
+        journal = receive_issue_reply_without_helpdesk(issue_id, from_journal)
+        email_details = compose_email_details()
+        journal.notes = email_details + journal.notes
+        journal.save
+        journal
       end
       
     end # module InstanceMethods
