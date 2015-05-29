@@ -5,7 +5,7 @@ class HelpdeskHooks < Redmine::Hook::Listener
     i = Issue.find(context[:issue].id)
     c = CustomField.find_by_name('owner-email')
     owner_email = i.custom_value_for(c).try(:value)
-    return if owner_email.blank?
+    #return if owner_email.blank? # always show the flag but warn the user before save (implemented in the custom workflow)
     p = i.project
     s = CustomField.find_by_name('helpdesk-send-to-owner-default')
     send_to_owner_default = p.custom_value_for(s).try(:value) if p.present? && s.present?
