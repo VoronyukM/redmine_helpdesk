@@ -30,7 +30,7 @@ module RedmineHelpdesk
           end
           email_details << "Date: " + @email[:date].to_s + "\n"
           email_details << "Subject: " + @email[:subject].to_s + "\n"
-          email_details = "<pre>\n" + Mail::Encodings.unquote_and_convert_to(email_details, 'utf-8') + "</pre>"
+          email_details = "bq. " + Mail::Encodings.unquote_and_convert_to(email_details, 'utf-8') + "\n"
 	  end
 	  email_details = compose_email_details()
           issue.description = email_details + issue.description
@@ -78,7 +78,7 @@ module RedmineHelpdesk
           end
           email_details << "Date: " + @email[:date].to_s + "\n"
           email_details << "Subject: " + @email[:subject].to_s + "\n"
-          email_details = "<pre>\n" + Mail::Encodings.unquote_and_convert_to(email_details, 'utf-8') + "</pre>"
+          email_details = "bq. " + Mail::Encodings.unquote_and_convert_to(email_details, 'utf-8') + "\n"
           email_details
       end
       # Overrides the receive_issue_reply method to
