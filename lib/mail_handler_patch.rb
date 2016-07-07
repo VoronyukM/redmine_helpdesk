@@ -47,6 +47,13 @@ module RedmineHelpdesk
           # the notification email to the supportclient
           # on our own.
           HelpdeskMailer.email_to_supportclient(issue, sender_email).deliver
+          # move issue's description onto the new (1-st) journal entry
+          journal = Journal.new(:journalized_id => issue.id, :journalized_type => 'Issue', :user_id => issue.author.id, :notes => issue.description, :private_notes => false, :created_on => issue.created_on)
+          journal.notify = false # regular email sending to known users is done so no need to notify one more time about this technical operation
+          journal.save
+          issue.description = ''
+          issue.save
+
         end
         after_dispatch_to_default_hook issue
         return issue
