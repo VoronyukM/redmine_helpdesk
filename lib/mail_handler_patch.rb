@@ -21,8 +21,7 @@ module RedmineHelpdesk
         # permission treat_user_as_supportclient enabled
         if roles.any? {|role| role.allowed_to?(:treat_user_as_supportclient) }
           sender_email = @email.from.first
-          # turn off the block and use the subroutine instead
-          if false
+          #XXX the email_details overrides bellow: there is subroutine call instead
           email_details = "From: " + @email[:from].formatted.first + "\n"
           email_details << "To: " + @email[:to].formatted.join(', ') + "\n"
 
@@ -43,9 +42,7 @@ module RedmineHelpdesk
           end
 
           email_details << "Date: " + @email[:date].to_s + "\n"
-          email_details << "Subject: " + @email[:subject].to_s + "\n"
-          email_details = "bq. " + Mail::Encodings.unquote_and_convert_to(email_details, 'utf-8') + "\n"
-	  end
+          email_details = "<pre>\n" + Mail::Encodings.unquote_and_convert_to(email_details, 'utf-8') + "</pre>"
 	  email_details = compose_email_details()
           issue.description = email_details + issue.description
           issue.save
@@ -93,6 +90,9 @@ module RedmineHelpdesk
         end
       end
       # just copy and paste the lines above
+      # with the modifications:
+      # 1. add Subject
+      # 2. use "bq." instead "<pre>...</pre>"
       def compose_email_details()
 	  email_details = "From: " + @email[:from].formatted.first + "\n"
           email_details << "To: " + @email[:to].formatted.join(', ') + "\n"
