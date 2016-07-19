@@ -1,7 +1,21 @@
+0.0.15
+---
+* Added support for tracking email details by martincizek from orchitech
+
+0.0.14
+---
+* Make plugin compatibility with Redmine 3.0.1 by Vilppu Vuorinen
+
+0.0.13
+---
+* Unit and functional tests with travis and code climate support by Vilppu Vuorinen
+* Add customizable email footers by martincizek
+* Test compatibility with Redmine 2.6.2
+
 0.0.12
 ---
-* Add support for non-anonymous supportclients
-* Add issue matching based on standard MIME header references
+* Add support for non-anonymous supportclients by martincizek
+* Add issue matching based on standard MIME header references by martincizek
 * Test compatibility with Redmine 2.5.3
 
 0.0.11

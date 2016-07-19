@@ -7,6 +7,7 @@ class HelpdeskMailer < ActionMailer::Base
   helper :application
 
   include Redmine::I18n
+  include MacroExpander
 
   # set the hostname for url_for helper
   def self.default_url_options
@@ -14,7 +15,14 @@ class HelpdeskMailer < ActionMailer::Base
   end
 
   # Sending email notifications to the supportclient
-  def email_to_supportclient(issue, recipient, journal=nil, text='')
+  def email_to_supportclient(issue, params)
+    # issue, recipient, journal=nil, text='', copy_to=nil    
+
+    recipient = params[:recipient]
+    journal = params[:journal]
+    text = params[:text]
+    carbon_copy = params[:carbon_copy]    
+
     redmine_headers 'Project' => issue.project.identifier,
                     'Issue-Id' => issue.id,
                     'Issue-Author' => issue.author.login
@@ -38,8 +46,10 @@ class HelpdeskMailer < ActionMailer::Base
     f = CustomField.find_by_name('helpdesk-email-footer')
     reply  = p.nil? || r.nil? ? '' : p.custom_value_for(r).try(:value)
     footer = p.nil? || f.nil? ? '' : p.custom_value_for(f).try(:value)
-    if text.present?
-      footer = replace_footer_placeholders(footer, journal)
+    # add carbon copy
+    ct = CustomField.find_by_name('copy-to')
+    if carbon_copy.nil?
+      carbon_copy = issue.custom_value_for(ct).try(:value)
     end
     # add any attachements
     if journal.present? && text.present?
@@ -81,8 +91,9 @@ class HelpdeskMailer < ActionMailer::Base
         :reply_to => sender.present? && sender || Setting.mail_from,
         :to       => recipient,
         :subject  => subject,
-        :body     => t.gsub("##issue-id##", issue.id.to_s),
-        :date     => Time.zone.now
+        :body     => expand_macros(t, issue, journal),
+        :date     => Time.zone.now,
+        :cc       => carbon_copy
       )
     else
       # fallback to a regular notifications email with redmine view
@@ -96,7 +107,8 @@ class HelpdeskMailer < ActionMailer::Base
         :subject  => subject,
         :date     => Time.zone.now,
         :template_path => 'mailer',
-        :template_name => 'issue_edit'
+        :template_name => 'issue_edit',
+        :cc            => carbon_copy
       )
     end
     # return mail object to deliver it
@@ -133,22 +145,4 @@ class HelpdeskMailer < ActionMailer::Base
     @references_objects ||= []
     @references_objects << object
   end
-
-  def replace_footer_placeholders(footer, journal)
-    placeholders = [
-      ["%USER_FIRST_NAME%", "#{journal.user.firstname}"],
-      ["%USER_LAST_NAME%", "#{journal.user.lastname}"],
-      ["%USER_EMAIL%", "#{journal.user.mail}"],
-      ["%USER_LOGIN%", "#{journal.user.login}"],
-    ]
-    CustomField.where(:type => 'UserCustomField').each do |user_cf|
-      cf_name = user_cf.name.upcase.gsub(' ', '_')
-      user_cf_cv = journal.user.custom_field_values.select { |cv| cv.custom_field.id == user_cf.id }.first.value
-      placeholders << ["%USER_CF_#{cf_name}%", user_cf_cv.nil? ? '' : user_cf_cv]
-    end
-
-    placeholders.each { |placeholder| footer = footer.gsub(placeholder[0], placeholder[1]) }
-    return footer
-  end
-
 end
