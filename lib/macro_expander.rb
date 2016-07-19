@@ -31,6 +31,7 @@ module MacroExpander
       @string.gsub!("##issue-subject##", @issue.subject)
       @string.gsub!("##issue-tracker##", @issue.tracker.name)
       @string.gsub!("##issue-status##", @issue.status.name)
+      @string.gsub!("##issue-description##", @issue.description)
     end
 
     def expand_project
