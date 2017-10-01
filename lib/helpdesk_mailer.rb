@@ -3,6 +3,8 @@
 # uses this method-name too in their mailer. This is the reason
 # why we need our own Mailer class.
 #
+require 'open-uri'
+
 class HelpdeskMailer < ActionMailer::Base
   helper :application
 
@@ -59,12 +61,8 @@ class HelpdeskMailer < ActionMailer::Base
           begin
             attachments[a.filename] = File.read(a.diskfile)
           rescue
-	    begin
               # try to obtain the attachment from dropbox (if redmine_dropbox_attachments plugin is used)
-	      attachments[a.filename] = Attachment.dropbox_client.find(a.dropbox_path).download
-	    rescue
-              logger.debug "[redmine_helpdesk] Failed to attach  #{a.filename}"
-	    end
+              attachments[a.filename] = open(Attachment.dropbox_client.get_temporary_link(a.dropbox_path).link).read
           end
         end
       end
